@@ -17,8 +17,8 @@ const graphvizLayout = (params) => {
     const widthBonus = params.rankdir === 'LR' || params.rankdir === 'RL' ? 2 : 2.5;
     const heightBonus = params.rankdir === 'LR' || params.rankdir === 'RL' ? 2.5 : 2;
     data.nodes.forEach(n => {
-      nodes[n.id] = n.label;
-      result.push(`${n.label} [width=${n.width ? n.width * 0.010416 * widthBonus : widthBonus}, height=${n.height ? n.height * 0.010416 * heightBonus : heightBonus}]`)
+      nodes[n.id] = n.id;
+      result.push(`${n.id} [width=${n.width ? n.width * 0.010416 * widthBonus : widthBonus}, height=${n.height ? n.height * 0.010416 * heightBonus : heightBonus}]`)
     })
     // edge去重
     const pathDic = {};
@@ -53,7 +53,7 @@ const graphvizLayout = (params) => {
   
   computedData.forEach(d => {
     if (d.attributes.class === 'node') {
-      const parseNode = params.data.nodes.find(n => n.label === d.key);
+      const parseNode = params.data.nodes.find(n => n.id === d.key);
       parseNode.top = parseFloat(d.children.find((c) => c.tag === 'ellipse').center.y);
       parseNode.left = parseFloat(d.children.find((c) => c.tag === 'ellipse').center.x);
       if (!parseNode.width) {
@@ -65,8 +65,8 @@ const graphvizLayout = (params) => {
     }
     if (d.attributes.class === 'edge') {
       const parseEdges = params.data.edges.filter(e => {
-        const sourceId = params.data.nodes.find(n => n.label === d.key.split('->')[0]).id;
-        const targetId = params.data.nodes.find(n => n.label === d.key.split('->')[1]).id
+        const sourceId = params.data.nodes.find(n => n.id === d.key.split('->')[0]).id;
+        const targetId = params.data.nodes.find(n => n.id === d.key.split('->')[1]).id
         if ((e.sourceNode === sourceId && e.targetNode === targetId) ||
           (e.source === sourceId && e.target === targetId)) {
           return true;
