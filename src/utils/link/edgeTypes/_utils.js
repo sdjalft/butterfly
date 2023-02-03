@@ -5,6 +5,30 @@ const MINDIST = 20;
 const TOL = 0.1;
 const TOLxTOL = 0.01;
 const TOGGLE_DIST = 20;
+
+let canvas = null;
+
+export function prepareAvoidObstaclesInfo(_canvas) {
+  canvas = _canvas;
+}
+export function getOriginCanvas() {
+  return canvas;
+}
+export function getAvoidObstaclesInfo() {
+  return {
+    nodes: _.get(canvas, 'nodes', []).map((item) => {
+      return {
+        id: item.id,
+        left: item.left,
+        top: item.top,
+        width: item.width || item.options.width,
+        height: item.height || item.options.height
+      }
+    }),
+    edges: _.get(canvas, 'nodes', []).map((item) => item.options)
+  }
+}
+
 export const DEFAULT_RADIUS = 15;
 export const Point = function (x, y) {
   this.x = x;

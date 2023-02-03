@@ -197,6 +197,8 @@ class BaseEdge extends Edge {
       obj.breakPoints[0].type = 'start';
       obj.breakPoints[obj.breakPoints.length - 1].type = 'end';
       this._breakPoints = obj.breakPoints;
+    } else if (this.shapeType === 'AdvancedManhattan2') {
+      path = DrawUtil.drawAdvancedManhattan2(sourcePoint, targetPoint);
     } else if (this.shapeType === 'AdvancedBezier') {
       path = DrawUtil.drawAdvancedBezier(sourcePoint, targetPoint);
     } else if (/^Bezier2-[1-3]$/.test(this.shapeType)) {
