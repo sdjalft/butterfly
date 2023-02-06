@@ -7,7 +7,10 @@ const OUTSIDE_BORDER = 20;
 const EDGE_MASK = 500;
 const CROSS_BONUS = 0.5;
 const CORNER_BONUS = 2;
+// 同向优势
 const SAME_DIRECTION_PROFILL_MASK = 5;
+// 非主方向剪枝
+const WRONG_DIRECTION_MASK = -100;
 
 const drawAdvancedManhattan2 = (sourceEndpoint, targetEndpoint) => {
   const canvas = getOriginCanvas();
@@ -17,6 +20,7 @@ const drawAdvancedManhattan2 = (sourceEndpoint, targetEndpoint) => {
   const canvasPieces = () => {
     let funcPiecesArray = [];
     let minX, minY, maxX, maxY;
+    console.log(nodes);
     nodes.forEach(n => {
       if (n.left < minX || !minX) {
         minX = n.left;
@@ -197,10 +201,12 @@ const drawAdvancedManhattan2 = (sourceEndpoint, targetEndpoint) => {
   const edgesAStar = () => {
     const getEndpointPiece = (endpoint) => {
       for (let cc = 0; cc < piecesArray.length; cc++) {
+        const endpoint0 = _.get(endpoint, 'pos.0') || endpoint[0];
+        const endpoint1 = _.get(endpoint, 'pos.1') || endpoint[1];
         // TODO 换向以及可优化
-        if (_.get(piecesArray, `${cc}.0.left`) <= endpoint[0] && _.get(piecesArray, `${cc + 1}.0.left`) > endpoint[0]) {
+        if (_.get(piecesArray, `${cc}.0.left`) <= endpoint0 && _.get(piecesArray, `${cc + 1}.0.left`) > endpoint0) {
           for (let dd = 0; dd < piecesArray[cc].length; dd++) {
-            if (_.get(piecesArray, `${cc}.${dd}.top`) <= endpoint[1] && _.get(piecesArray, `${cc}.${dd + 1}.top`) > endpoint[1]) {
+            if (_.get(piecesArray, `${cc}.${dd}.top`) <= endpoint1 && _.get(piecesArray, `${cc}.${dd + 1}.top`) > endpoint1) {
               return _.get(piecesArray, `${cc}.${dd}`);
             }
           }
@@ -225,6 +231,8 @@ const drawAdvancedManhattan2 = (sourceEndpoint, targetEndpoint) => {
       value: 0,
       dir: [1, 0]
     }];
+    // TODO 换向
+    const mainDirection = targetPointPiece.leftIndex - sourcePointPiece.leftIndex;
     while (edgeQueue.length !== 0) {
       const currEdge = edgeQueue.shift();
       const addAStarEdge = (piece, dir) => {
@@ -237,6 +245,7 @@ const drawAdvancedManhattan2 = (sourceEndpoint, targetEndpoint) => {
         }
         if (!piece.visited) {
           const isSameDir = dir[0] === currEdge.dir[0] && dir[1] === currEdge.dir[1];
+          const isWrongDir = (dir[0] * mainDirection) < 0;
           let edgeBonus = 1;
           if ((dir[0] !== 0 && piece.edgeType === 'horizon') || (dir[1] !== 0 && piece.edgeType === 'vertical')) {
             edgeBonus = CROSS_BONUS;
@@ -246,7 +255,8 @@ const drawAdvancedManhattan2 = (sourceEndpoint, targetEndpoint) => {
           edgeQueue.push({
             left: piece.leftIndex,
             top: piece.topIndex,
-            value: (piece.bounding * edgeBonus) + currEdge.value - (isSameDir ? SAME_DIRECTION_PROFILL_MASK : 0),
+            value: (piece.bounding * edgeBonus) + currEdge.value - (isSameDir ? SAME_DIRECTION_PROFILL_MASK : 0)
+              - (isWrongDir ? WRONG_DIRECTION_MASK : 0),
             dir: dir
           });
           piece.visited = true;
@@ -299,12 +309,12 @@ const drawAdvancedManhattan2 = (sourceEndpoint, targetEndpoint) => {
         // 添加真实节点，可以不按照piece数据结构走
         // TODO 换向
         resultPath.push({
-          left: sourceEndpoint.left,
-          top: sourceEndpoint.top
+          left: _.get(sourceEndpoint, 'pos.0') || sourceEndpoint[0],
+          top: _.get(sourceEndpoint, 'pos.1') || sourceEndpoint[1]
         });
         resultPath.unshift({
-          left: targetEndpoint.left,
-          top: targetEndpoint.top
+          left: _.get(targetEndpoint, 'pos.0') || targetEndpoint[0],
+          top: _.get(targetEndpoint, 'pos.1') || targetEndpoint[1]
         });
       }
       // 四方向广度优先遍历
@@ -333,11 +343,11 @@ const drawAdvancedManhattan2 = (sourceEndpoint, targetEndpoint) => {
   }
 
   let piecesArray;
-  if (canvas.piecesArray) {
-    piecesArray = canvas.piecesArray;
+  if (window.piecesArray) {
+    piecesArray = window.piecesArray;
   } else {
     piecesArray = canvasPieces();
-    canvas.piecesArray = piecesArray;
+    window.piecesArray = piecesArray;
   }
   // 根据节点寻路
   const result = edgesAStar();
