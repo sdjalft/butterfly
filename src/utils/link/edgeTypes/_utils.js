@@ -34,10 +34,6 @@ export const Point = function (x, y) {
   this.x = x;
   this.y = y;
 }
-// const Point = function(x, y) {
-//   this.x = x;
-//   this.y = y;
-// }
 
 export const LEFT = 'Left';
 export const RIGHT = 'Right';
@@ -85,7 +81,6 @@ export function _route(conn, fromPt, fromDir, toPt, toDir) {
       else {
         point = new Point(fromPt.x - (xDiff / 2), fromPt.y);
       }
-
       if (yDiff > 0) {
         dir = TOP
       }
@@ -178,8 +173,6 @@ export function _route(conn, fromPt, fromDir, toPt, toDir) {
     }
   }
   _route(conn, point, dir, toPt, toDir);
-
-
 
 }
 
