@@ -245,7 +245,7 @@ const drawAdvancedManhattan2 = (sourceEndpoint, targetEndpoint) => {
         }
         if (!piece.visited) {
           const isSameDir = dir[0] === currEdge.dir[0] && dir[1] === currEdge.dir[1];
-          const isWrongDir = (dir[0] * mainDirection) < 0;
+          const isWrongDir = (dir[0] * (targetPointPiece.left - piece.left)) < 0;
           let edgeBonus = 1;
           if ((dir[0] !== 0 && piece.edgeType === 'horizon') || (dir[1] !== 0 && piece.edgeType === 'vertical')) {
             edgeBonus = CROSS_BONUS;

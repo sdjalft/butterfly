@@ -10,5 +10,5 @@ export {default as drawManhattan} from './edgeTypes/manhattan.js';
 export {default as drawSecondBezier} from './edgeTypes/secondBezier.js';
 export {default as drawBrokenLine} from './edgeTypes/brokenLine.js';
 // export {default as drawAdvancedManhattan} from './edgeTypes/advancedManhattan.js';
-export {default as drawAdvancedManhattan2} from './edgeTypes/advancedManhattan2.js';
+export {default as drawAdvancedManhattan2} from './edgeTypes/advancedManhattan3.js';
 export {_findManhattanPoint as findManhattanPoint};
