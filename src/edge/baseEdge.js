@@ -24,6 +24,7 @@ class BaseEdge extends Edge {
     this.orientationLimit = _.get(opts, 'orientationLimit');
     this.shapeType = _.get(opts, 'shapeType', 'Straight');
     this.hasRadius=_.get(opts, "hasRadius", false),
+    this.radius=_.get(opts, "radius", false),
     this.label = _.get(opts, 'label');
     this.arrow = _.get(opts, 'arrow');
     this.arrowShapeType = _.get(opts, 'arrowShapeType', 'default');
@@ -73,6 +74,9 @@ class BaseEdge extends Edge {
     // 偏移防止互相反向的线段重叠
     this._offsetPosLeft = 0;
     this._offsetPosTop = 0;
+
+    // 动画的promise
+    this.animatePromise = null;
   }
   _init(obj) {
     if (!this._isInited) {
@@ -191,7 +195,8 @@ class BaseEdge extends Edge {
         breakPoints: this._breakPoints,
         hasDragged: this._hasDragged,
         draggable: this.draggable,
-        hasRadius: this.hasRadius
+        hasRadius: this.hasRadius,
+        radius: this.radius
       });
       path = obj.path;
       obj.breakPoints[0].type = 'start';
@@ -206,46 +211,29 @@ class BaseEdge extends Edge {
     } else if(this.shapeType === 'BrokenLine'){
       path = DrawUtil.drawBrokenLine(sourcePoint, targetPoint);
     } else if(this.shapeType === 'AdvancedManhattan'){
+      _.assign(sourcePoint, {
+        nodePos: [this.sourceNode.left, this.sourceNode.top],
+        nodeSize: [this.sourceNode.width, this.sourceNode.height]
+      });
+      _.assign(targetPoint, {
+        nodePos: [this.targetNode.left, this.targetNode.top],
+        nodeSize: [this.targetNode.width, this.targetNode.height]
+      });
+
       let obj = DrawUtil.drawAdvancedManhattan(sourcePoint, targetPoint, {
+        sourceNodeId: this.sourceNode.id,
+        targetNodeId: this.targetNode.id,
         breakPoints: this._breakPoints,
         hasDragged: this._hasDragged,
         draggable: this.draggable,
         hasRadius: this.hasRadius,
-        excludeEnds: [],
-        paddingBox: { // 初始化矩阵位置 加padding值
-          x: -10,
-          y: -10,
-          width: 20,
-          height: 20
-      },
-      directionMap: { // 方向
-        bottom: {x: 0, y: 1},
-        left: {x: -1, y: 0},
-        right: {x: 1, y: 0},
-        top: {x: 0, y: -1}
-      },
-      directions: [ // 偏移量
-            { offsetX: 10, offsetY: 0, cost: 10 },
-            { offsetX: -10, offsetY: 0, cost: 10 },
-            { offsetX: 0, offsetY: 10, cost: 10 },
-            { offsetX: 0, offsetY: -10, cost: 10 }
-      ],
-      penalties: { // 判断是否为起点时用到的参数
-            0: 0,
-            45: 5,
-            90: 5
-        },
-      maximumLoops: 2000, // 最大计算量
-      maxAllowedDirectionChange: 90, // 最大允许方向变化
-      step: 10, // 计算的一个数值
-      startDirections: ['top', 'right', 'bottom', 'left'], // 开始方向
-      endDirections: ['top', 'right', 'bottom', 'left'], // 结束方向
-      precision: 1
+        radius: this.radius
       });
       path = obj.path;
-      obj.breakPoints[0].type = 'start';
-      obj.breakPoints[obj.breakPoints.length - 1].type = 'end';
-      this._breakPoints = obj.breakPoints;
+      // 后续再支持拖动
+      // obj.breakPoints[0].type = 'start';
+      // obj.breakPoints[obj.breakPoints.length - 1].type = 'end';
+      // this._breakPoints = obj.breakPoints;
     }
     this._path = path;
     return path;
@@ -401,19 +389,32 @@ class BaseEdge extends Edge {
     return true;
   }
   addAnimate(options) {
-    this.animateDom = LinkAnimateUtil.addAnimate(this.dom, this._path, _.assign({},{
+    this.animatePromise = LinkAnimateUtil.addAnimate(this.dom, this._path, _.assign({},{
       num: 1, // 现在只支持1个点点
       radius: 3,
       color: '#776ef3'
     }, options), this.animateDom);
+
+    this.animatePromise.then((data) => {
+      this.animateDom = data;
+    })
   }
   redrawAnimate() {
-    this.animateDom = LinkAnimateUtil.addAnimate(this.dom, this._path, {
+    this.animatePromise = LinkAnimateUtil.addAnimate(this.dom, this._path, {
       _isContinue: true
     }, this.animateDom);
+    this.animatePromise.then((data) => {
+      this.animateDom = data;
+    });
   }
   removeAnimate() {
-    $(this.animateDom).remove();
+    if (this.animatePromise) {
+      this.animatePromise.then(() => {
+        $(this.animateDom).remove();
+        this.animateDom = null;
+      });
+      this.animatePromise = null;
+    }
   }
   emit(type, data) {
     super.emit(type, data);
@@ -450,6 +451,7 @@ class BaseEdge extends Edge {
     }
     if (this.animateDom) {
       $(this.animateDom).remove();
+      this.animateDom = null;
     }
     $(this.dom).remove();
     // edge被destory后，undo的时候会复用edge实例，需要重新绑定事件，所以这里置为false

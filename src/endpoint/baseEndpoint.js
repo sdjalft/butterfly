@@ -4,10 +4,7 @@ const $ = require('jquery');
 const _ = require('lodash');
 
 import './baseEndpoint.less';
-
 import Endpoint from '../interface/endpoint';
-
-import {isHiddenNode, isHiddenGroup} from '../utils/virtualScroll';
 
 class BaseEndpoint extends Endpoint {
   constructor(opts) {
@@ -55,6 +52,8 @@ class BaseEndpoint extends Endpoint {
     }
     // 判断是否初始化过位置
     this._isInitPos = false;
+    //虚拟滚动对象
+    this._virtualScrollUtil = opts._virtualScrollUtil;
   }
 
   _init(obj) {
@@ -101,7 +100,7 @@ class BaseEndpoint extends Endpoint {
 
   updatePos(dom = this.dom, orientation = this.orientation, pos = this.pos, isNotEmitEvent) {
 
-    let _isVirtualHidden = this._node.__type === 'node' ? isHiddenNode(this._node.id) : isHiddenGroup(this._node.id);
+    let _isVirtualHidden = this._node.__type === 'node' ? this._virtualScrollUtil.isHiddenNode(this._node.id) : this._virtualScrollUtil.isHiddenGroup(this._node.id);
     if (_isVirtualHidden) {
       if (!this._isInitPos) {
         this._posTop = this._top = this._node.top;
