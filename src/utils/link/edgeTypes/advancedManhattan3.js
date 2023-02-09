@@ -156,7 +156,7 @@ const drawAdvancedManhattan3 = (sourceEndpoint, targetEndpoint) => {
         // 间隙位置评分
         let greatPos;
           // TODO 可以细化些，先找到最合适的坐标
-        greatPos = ((interval.area[0] === Infinity ? interval.area[1] : interval.area[0]) + 
+        greatPos = ((interval.area[0] === -Infinity ? interval.area[1] : interval.area[0]) + 
           (interval.area[1] === Infinity ? interval.area[0] : interval.area[1])) / 2;
         score += (Math.abs(greatPos - startPoint[1]) + Math.abs(greatPos - targetEndpoint.pos[1])
           - Math.abs(verticalInterval)) * POS_SCORE;
